@@ -3,113 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genshai Mart - Price Calculator</title>
+    <title>Genshai Mart - Công Cụ Tính Giá Bán</title>
+    <link rel="icon" type="image/x-icon" href="https://framerusercontent.com/images/RldHDnWU8w5VwWOAOitpoNZ2ZQ.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        genshaiYellow: '#FFCD1E',
+                        genshaiBlue: '#2C4295',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --genshai-blue: #1e3a8a;
-            --genshai-yellow: #FFD700;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
-            min-height: 100vh;
-        }
-        .glass-container {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(12px);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-        .btn-genshai {
-            background: linear-gradient(135deg, var(--genshai-blue) 0%, #3b82f6 100%);
-            color: white;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .btn-genshai:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(30, 58, 138, 0.3);
-        }
-        .btn-outline {
-            border: 2px solid var(--genshai-blue);
-            color: var(--genshai-blue);
-            transition: all 0.2s;
-        }
-        .btn-outline:hover {
-            background: rgba(30, 58, 138, 0.05);
-        }
-        .status-badge {
-            background: var(--genshai-yellow);
-            color: var(--genshai-blue);
-            box-shadow: 0 4px 10px rgba(255, 215, 0, 0.3);
-        }
-        .table-header {
-            background-color: var(--genshai-blue);
-            color: white;
-        }
-        .price-col-1 { color: #1e40af; background-color: #eff6ff; font-weight: 700; }
-        .price-col-2 { color: #166534; background-color: #f0fdf4; font-weight: 700; }
-        
-        /* Custom scrollbar for webkit */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        body { font-family: 'Inter', sans-serif; }
+        .price-card { transition: all 0.3s ease; }
+        .price-card:hover { transform: translateY(-2px); }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #2C4295; border-radius: 10px; }
     </style>
 </head>
-<body class="p-4 md:p-10 text-slate-800">
-    <div class="max-w-6xl mx-auto">
-        <header class="glass-container p-8 mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div class="flex items-center gap-4">
-                <div class="w-12 h-12 bg-blue-900 rounded-xl flex items-center justify-center text-white font-bold text-2xl shadow-lg">G</div>
-                <div>
-                    <h1 class="text-2xl font-black text-blue-900 uppercase tracking-tighter italic">Genshai Mart</h1>
-                    <p class="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Retail Intelligence System</p>
-                </div>
-            </div>
-            <div id="status" class="status-badge px-6 py-2 rounded-full text-xs font-black uppercase tracking-wider animate-pulse">
-                Syncing Master Data...
-            </div>
-        </header>
+<body class="bg-[#f0f2f8] p-4 md:p-10">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-            <div class="md:col-span-2 glass-container p-8">
-                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">01. Import Cost Data</label>
-                <input type="file" id="inputFile" accept=".xlsx, .xls" class="block w-full text-sm text-slate-500 file:mr-6 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-xs file:font-black file:uppercase file:bg-blue-900 file:text-white hover:file:opacity-90 cursor-pointer border-2 border-dashed border-slate-200 rounded-2xl p-4 bg-slate-50/50"/>
+    <div class="max-w-5xl mx-auto bg-white p-6 md:p-8 rounded-3xl shadow-2xl border-t-8 border-genshaiYellow">
+        
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4 border-b border-slate-100 pb-8">
+            <h1 class="text-2xl font-black text-genshaiBlue uppercase tracking-tight flex items-center gap-3">
+                <span class="bg-genshaiYellow text-genshaiBlue px-3 py-1 rounded-lg">GENSHAI MART</span> 
+                Tính Giá Bán Lẻ <span class="text-slate-400 font-medium lowercase">v2.0</span>
+            </h1>
+            <div id="status-tag" class="px-4 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full animate-pulse uppercase tracking-widest">
+                ⏳ Đang nạp Master Data...
             </div>
-            <div class="glass-container p-8 flex flex-col justify-center gap-4">
-                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">Resources</label>
-                <button id="downloadTemplate" class="btn-outline w-full py-3 rounded-2xl text-xs font-black uppercase tracking-widest">
-                    Get Template
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <div class="lg:col-span-2 bg-slate-50/50 p-6 rounded-2xl border-2 border-dashed border-slate-200">
+                <label class="block text-xs font-black text-slate-400 uppercase mb-3 tracking-widest">01. Import file giá vốn</label>
+                <input type="file" id="inputFile" accept=".xlsx, .xls" 
+                       class="w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-6 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:bg-genshaiBlue file:text-white hover:file:bg-blue-800 cursor-pointer transition-all"/>
+            </div>
+            <div class="flex flex-col justify-end">
+                <button id="downloadTemplate" class="w-full py-4 border-2 border-genshaiBlue text-genshaiBlue font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-genshaiBlue hover:text-white transition-all">
+                    Tải Template Mẫu
                 </button>
             </div>
         </div>
 
-        <main class="glass-container p-8 hidden overflow-hidden" id="resultSection">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                <h2 class="text-xl font-black text-blue-900 uppercase italic">Price Calculations</h2>
-                <button id="exportBtn" class="btn-genshai px-10 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-xl">
-                    Download Report
+        <div id="resultSection" class="hidden space-y-6">
+            <div class="flex justify-between items-end border-b-2 border-slate-100 pb-4">
+                <h3 class="font-black text-genshaiBlue uppercase text-sm tracking-widest">Bảng tính toán chi tiết</h3>
+                <button id="exportBtn" class="bg-genshaiBlue text-genshaiYellow px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg hover:scale-105 transition-all active:scale-95">
+                    Xuất file kết quả
                 </button>
             </div>
-            
-            <div class="rounded-2xl border border-slate-100 overflow-hidden shadow-sm bg-white">
+
+            <div class="overflow-hidden rounded-2xl border border-slate-200 shadow-sm bg-white">
                 <table class="min-w-full text-sm">
-                    <thead class="table-header">
+                    <thead class="bg-genshaiBlue text-white">
                         <tr>
-                            <th class="px-6 py-5 font-bold uppercase tracking-wider text-[11px]">Barcode</th>
-                            <th class="px-6 py-5 font-bold uppercase tracking-wider text-[11px]">Product Name</th>
-                            <th class="px-6 py-5 font-bold uppercase tracking-wider text-[11px] text-right border-l border-blue-800/30">Cost</th>
-                            <th class="px-6 py-5 font-bold uppercase tracking-wider text-[11px] text-right border-l border-blue-800/30">Retail KV1</th>
-                            <th class="px-6 py-5 font-bold uppercase tracking-wider text-[11px] text-right border-l border-blue-800/30">Retail KV2</th>
+                            <th class="px-6 py-5 font-black uppercase tracking-wider text-[10px]">Barcode</th>
+                            <th class="px-6 py-5 font-black uppercase tracking-wider text-[10px]">Tên hàng hoá</th>
+                            <th class="px-6 py-5 font-black uppercase tracking-wider text-[10px] text-right">Giá vốn</th>
+                            <th class="px-6 py-5 font-black uppercase tracking-wider text-[10px] text-right bg-blue-800/50">Giá KV 1 (21%)</th>
+                            <th class="px-6 py-5 font-black uppercase tracking-wider text-[10px] text-right bg-green-800/50">Giá KV 2 (19%)</th>
                         </tr>
                     </thead>
-                    <tbody id="resultBody" class="divide-y divide-slate-50"></tbody>
+                    <tbody id="resultBody" class="divide-y divide-slate-100 font-semibold text-slate-600"></tbody>
                 </table>
             </div>
-        </main>
+        </div>
+
+        <div class="mt-8 text-[10px] text-slate-400 italic bg-genshaiYellow/5 p-4 rounded-lg border border-genshaiYellow/20">
+            * Ghi chú: Giá bán được tính theo công thức (Giá vốn / (1 - %Lợi nhuận)) * (1 + %VAT) và làm tròn xuống hàng trăm.
+        </div>
     </div>
 
     <script>
@@ -128,10 +100,11 @@
 
         const roundDownToHundred = (num) => Math.floor(num / 100) * 100;
 
+        // Load Master Data
         window.onload = async () => {
-            const statusEl = document.getElementById('status');
+            const statusTag = document.getElementById('status-tag');
             try {
-                const response = await fetch('master_data.xlsx?v=' + Date.now());
+                const response = await fetch('master_data.xlsx?v=' + new Date().getTime());
                 if (!response.ok) throw new Error();
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -148,15 +121,15 @@
                         };
                     }
                 });
-                statusEl.innerText = '● Master Data: Connected';
-                statusEl.classList.remove('animate-pulse');
-                statusEl.className = 'px-6 py-2 rounded-full text-xs font-black uppercase tracking-wider bg-green-500 text-white shadow-lg shadow-green-200';
+                statusTag.innerText = "● Hệ thống sẵn sàng";
+                statusTag.className = "px-4 py-1 bg-genshaiYellow text-genshaiBlue text-xs font-bold rounded-full uppercase tracking-widest";
             } catch (e) {
-                statusEl.innerText = '● Data Error';
-                statusEl.className = 'px-6 py-2 rounded-full text-xs font-black uppercase tracking-wider bg-red-500 text-white';
+                statusTag.innerText = "● Lỗi dữ liệu Master";
+                statusTag.className = "px-4 py-1 bg-red-100 text-red-600 text-xs font-bold rounded-full";
             }
         };
 
+        // File Processing
         document.getElementById('inputFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -184,35 +157,34 @@
 
                     finalResults.push({ 'Barcode': barcode, 'Tên hàng hoá': master ? master.name : 'N/A', 'Giá vốn': cost, 'Giá bán KV 1': p1, 'Giá bán KV 2': p2 });
                     
-                    const tr = document.createElement('tr');
-                    tr.className = "hover:bg-slate-50 transition-colors";
-                    tr.innerHTML = `
-                        <td class="px-6 py-5 font-mono font-bold text-blue-900">${barcode}</td>
-                        <td class="px-6 py-5 text-slate-500 font-medium">${master ? master.name : 'N/A'}</td>
-                        <td class="px-6 py-5 text-right font-bold text-slate-700 border-l border-slate-50">${cost.toLocaleString('vi-VN')}</td>
-                        <td class="px-6 py-5 text-right price-col-1 border-l border-slate-50">${p1.toLocaleString('vi-VN')}</td>
-                        <td class="px-6 py-5 text-right price-col-2 border-l border-slate-50">${p2.toLocaleString('vi-VN')}</td>
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition-all">
+                            <td class="px-6 py-5 font-black text-genshaiBlue">${barcode}</td>
+                            <td class="px-6 py-5 text-slate-500">${master ? master.name : 'N/A'}</td>
+                            <td class="px-6 py-5 text-right">${cost.toLocaleString('vi-VN')}</td>
+                            <td class="px-6 py-5 text-right font-black text-blue-700 bg-blue-50/30 border-l border-white">${p1.toLocaleString('vi-VN')}</td>
+                            <td class="px-6 py-5 text-right font-black text-green-700 bg-green-50/30 border-l border-white">${p2.toLocaleString('vi-VN')}</td>
+                        </tr>
                     `;
-                    tbody.appendChild(tr);
                 });
                 document.getElementById('resultSection').classList.remove('hidden');
-                document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
             };
             reader.readAsArrayBuffer(file);
         });
 
+        // Templates & Exports
         document.getElementById('downloadTemplate').addEventListener('click', () => {
             const ws = XLSX.utils.json_to_sheet([{ "barcode": "893...", "giá vốn": 0 }]);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Template");
-            XLSX.writeFile(wb, "Genshai_Template.xlsx");
+            XLSX.writeFile(wb, "Template_Gia_Von_Genshai.xlsx");
         });
 
         document.getElementById('exportBtn').addEventListener('click', () => {
             const ws = XLSX.utils.json_to_sheet(finalResults);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Prices");
-            XLSX.writeFile(wb, `Genshai_Report_${new Date().getTime()}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "Bang_Gia");
+            XLSX.writeFile(wb, `Bao_Gia_Genshai_${new Date().toLocaleDateString('vi-VN')}.xlsx`);
         });
     </script>
 </body>
