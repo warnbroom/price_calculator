@@ -8,46 +8,43 @@
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-gray-50 text-gray-800 p-8">
-    <div class="max-w-5xl mx-auto space-y-6">
+    <div class="max-w-6xl mx-auto space-y-6">
         <div class="flex justify-between items-center">
             <h1 class="text-3xl font-bold text-blue-800">Công cụ tính giá bán</h1>
             <div id="status" class="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 font-medium">
-                Đang tải Master Data...
+                Đang nạp Master Data...
             </div>
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
-                <h2 class="text-xl font-semibold">Upload File Giá Vốn</h2>
-                <button id="downloadTemplate" class="text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold py-2 px-4 border border-blue-200 rounded flex items-center transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="Path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <h2 class="text-xl font-semibold">1. Upload File Giá Vốn</h2>
+                <button id="downloadTemplate" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded border">
                     Tải file mẫu (.xlsx)
                 </button>
             </div>
-            
-            <input type="file" id="inputFile" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer" disabled />
-            <p class="text-xs text-gray-500 mt-2 italic">* File tải lên cần chứa cột: <span class="font-bold text-gray-700">barcode</span> và <span class="font-bold text-gray-700">giá vốn</span></p>
+            <input type="file" id="inputFile" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"/>
         </div>
 
         <div class="bg-white p-6 rounded-lg shadow border border-gray-200 hidden" id="resultSection">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-semibold">Kết Quả Tính Toán</h2>
-                <button id="exportBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition-transform active:scale-95">
-                    Xuất File Kết Quả
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-700">2. Kết Quả (Làm tròn xuống hàng trăm)</h2>
+                <button id="exportBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded shadow-lg transition-transform active:scale-95">
+                    Xuất File Excel
                 </button>
             </div>
-            <div class="overflow-x-auto border rounded">
+            <div class="overflow-x-auto rounded-lg border border-gray-100">
                 <table class="min-w-full text-left text-sm">
-                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs font-bold">
+                    <thead class="bg-slate-800 text-white uppercase text-xs">
                         <tr>
-                            <th class="px-4 py-3 border-b">Barcode</th>
-                            <th class="px-4 py-3 border-b">Tên hàng hoá</th>
-                            <th class="px-4 py-3 border-b text-right">Giá vốn</th>
-                            <th class="px-4 py-3 border-b text-right">Giá bán KV 1</th>
-                            <th class="px-4 py-3 border-b text-right">Giá bán KV 2</th>
+                            <th class="px-4 py-4">Barcode</th>
+                            <th class="px-4 py-4">Tên hàng hoá</th>
+                            <th class="px-4 py-4 text-right">Giá vốn</th>
+                            <th class="px-4 py-4 text-right bg-blue-900">Giá bán KV 1</th>
+                            <th class="px-4 py-4 text-right bg-green-900">Giá bán KV 2</th>
                         </tr>
                     </thead>
-                    <tbody id="resultBody" class="divide-y"></tbody>
+                    <tbody id="resultBody" class="divide-y divide-gray-100"></tbody>
                 </table>
             </div>
         </div>
@@ -57,55 +54,50 @@
         let masterDataMap = {};
         let finalResults = [];
 
-        // 1. Tự động tải Master Data từ server (GitHub)
+        // Helper tìm key không phân biệt hoa thường/khoảng trắng
+        const getVal = (row, target) => {
+            const key = Object.keys(row).find(k => k.toLowerCase().trim() === target.toLowerCase().trim());
+            return key ? row[key] : null;
+        };
+
+        const normalizePercent = (val) => {
+            let n = parseFloat(val) || 0;
+            return n > 1 ? n / 100 : n;
+        };
+
+        // Logic làm tròn xuống hàng trăm
+        const roundDownToHundred = (num) => {
+            return Math.floor(num / 100) * 100;
+        };
+
         window.onload = async () => {
             const statusEl = document.getElementById('status');
             try {
-                const response = await fetch('master_data.xlsx');
-                if (!response.ok) throw new Error('File master_data.xlsx không tồn tại trên repository.');
-                
+                const response = await fetch('master_data.xlsx?v=' + Date.now());
+                if (!response.ok) throw new Error();
                 const arrayBuffer = await response.arrayBuffer();
                 const workbook = XLSX.read(arrayBuffer, { type: 'array' });
                 const data = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
                 
                 data.forEach(row => {
-                    if (row['barcode']) {
-                        masterDataMap[row['barcode'].toString().trim()] = {
-                            name: row['tên hàng hoá'] || "N/A",
-                            margin1: normalizePercent(row['lợi nhuận Khu vực 1']),
-                            margin2: normalizePercent(row['lợi nhuận Khu vực 2']),
-                            vat: normalizePercent(row['VAT'])
+                    let bc = getVal(row, 'barcode');
+                    if (bc) {
+                        masterDataMap[bc.toString().trim()] = {
+                            name: getVal(row, 'tên hàng hoá') || "N/A",
+                            m1: normalizePercent(getVal(row, 'lợi nhuận Khu vực 1')),
+                            m2: normalizePercent(getVal(row, 'lợi nhuận Khu vực 2')),
+                            vat: normalizePercent(getVal(row, 'VAT'))
                         };
                     }
                 });
-
                 statusEl.innerText = '● Master Data: Sẵn sàng';
                 statusEl.className = 'text-sm px-3 py-1 rounded-full bg-green-100 text-green-700 font-medium';
-                document.getElementById('inputFile').disabled = false;
-            } catch (error) {
-                statusEl.innerText = '● Lỗi: Thiếu Master Data';
+            } catch (e) {
+                statusEl.innerText = '● Lỗi: Không nạp được master_data.xlsx';
                 statusEl.className = 'text-sm px-3 py-1 rounded-full bg-red-100 text-red-700 font-medium';
-                console.error(error);
             }
         };
 
-        // 2. Chức năng tải File Template cho User
-        document.getElementById('downloadTemplate').addEventListener('click', () => {
-            const templateData = [
-                { "barcode": "Ví dụ: 893000111", "giá vốn": 50000 }
-            ];
-            const ws = XLSX.utils.json_to_sheet(templateData);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template");
-            XLSX.writeFile(wb, "Template_Gia_Von.xlsx");
-        });
-
-        function normalizePercent(val) {
-            let n = parseFloat(val) || 0;
-            return n > 1 ? n / 100 : n;
-        }
-
-        // 3. Xử lý File Giá Vốn và Tính toán
         document.getElementById('inputFile').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (!file) return;
@@ -120,28 +112,39 @@
                 tbody.innerHTML = '';
 
                 data.forEach(row => {
-                    let barcode = row['barcode'] ? row['barcode'].toString().trim() : '';
-                    let cost = parseFloat(row['giá vốn']) || 0;
+                    let bc = getVal(row, 'barcode');
+                    let barcode = bc ? bc.toString().trim() : '';
+                    let cost = parseFloat(getVal(row, 'giá vốn')) || 0;
                     let master = masterDataMap[barcode] || null;
+
+                    let p1 = 0, p2 = 0;
+                    if (master) {
+                        // Công thức: (giá vốn / (1 - %lợi nhuận)) * (1 + %VAT)
+                        let rawP1 = (cost / (1 - master.m1)) * (1 + master.vat);
+                        let rawP2 = (cost / (1 - master.m2)) * (1 + master.vat);
+                        
+                        p1 = roundDownToHundred(rawP1);
+                        p2 = roundDownToHundred(rawP2);
+                    }
 
                     let res = {
                         'Barcode': barcode,
-                        'Tên hàng hoá': master ? master.name : 'Không tìm thấy trong Master Data',
+                        'Tên hàng hoá': master ? master.name : 'N/A',
                         'Giá vốn': cost,
-                        'Giá bán Khu vực 1': master ? Math.round((cost / (1 - master.margin1)) * (1 + master.vat)) : 0,
-                        'Giá bán Khu vực 2': master ? Math.round((cost / (1 - master.margin2)) * (1 + master.vat)) : 0
+                        'Giá bán KV 1': p1,
+                        'Giá bán KV 2': p2
                     };
 
                     finalResults.push(res);
                     
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-gray-50 transition-colors";
+                    tr.className = "hover:bg-gray-50 transition-colors text-gray-700";
                     tr.innerHTML = `
-                        <td class="px-4 py-3 border-b font-mono">${res['Barcode']}</td>
-                        <td class="px-4 py-3 border-b">${res['Tên hàng hoá']}</td>
-                        <td class="px-4 py-3 border-b text-right">${res['Giá vốn'].toLocaleString('vi-VN')}</td>
-                        <td class="px-4 py-3 border-b text-right text-blue-700 font-bold">${res['Giá bán Khu vực 1'].toLocaleString('vi-VN')}</td>
-                        <td class="px-4 py-3 border-b text-right text-green-700 font-bold">${res['Giá bán Khu vực 2'].toLocaleString('vi-VN')}</td>
+                        <td class="px-4 py-4 border-b font-mono font-bold">${res['Barcode']}</td>
+                        <td class="px-4 py-4 border-b">${res['Tên hàng hoá']}</td>
+                        <td class="px-4 py-4 border-b text-right">${res['Giá vốn'].toLocaleString('vi-VN')}</td>
+                        <td class="px-4 py-4 border-b text-right text-blue-700 font-bold bg-blue-50/50">${res['Giá bán KV 1'].toLocaleString('vi-VN')}</td>
+                        <td class="px-4 py-4 border-b text-right text-green-700 font-bold bg-green-50/50">${res['Giá bán KV 2'].toLocaleString('vi-VN')}</td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -150,12 +153,18 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // 4. Xuất kết quả
+        document.getElementById('downloadTemplate').addEventListener('click', () => {
+            const ws = XLSX.utils.json_to_sheet([{ "barcode": "893...", "giá vốn": 72000 }]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Template");
+            XLSX.writeFile(wb, "Template_Genshai.xlsx");
+        });
+
         document.getElementById('exportBtn').addEventListener('click', () => {
             const ws = XLSX.utils.json_to_sheet(finalResults);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Bang_Tinh_Gia");
-            XLSX.writeFile(wb, "Ket_Qua_Gia_Ban_Genshai.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Gia_Ban");
+            XLSX.writeFile(wb, `Genshai_Gia_Ban_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}.xlsx`);
         });
     </script>
 </body>
